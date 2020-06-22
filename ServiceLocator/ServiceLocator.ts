@@ -21,13 +21,14 @@ export default class ServiceLocator {
             console.error("Service " + type + " is already register");
     }
 
-    public Register<T extends IService>(service : {new() : T; }){
+    public Register<T extends IService>(service : {new() : T; }) : T{
         var type = service.name;
         if(!(type in this.services)){
             var serviceInstance = new service();
             this.services[type] = serviceInstance;
             serviceInstance.Initialize(this);
             this.ResolvePendingRequest(service);
+            return serviceInstance;
         }
         else
             console.error("Service " + type + " is already register");
@@ -51,21 +52,23 @@ export default class ServiceLocator {
         else{
             this.RegisterRequest(type, callback);
         }
-            
     }
 
     public DisposeService(service : IService){
         service.Dispose();
+        var type = service.constructor.name;
+        if(type in this.services)
+            delete this.services[type];
     }
 
     public DisposeAllServices(){
         for(var id in this.services){
             if(this.IsInstanceOfService(this.services[id])){
-                console.log("is IService");
                 (this.services[id] as IService).Dispose();
+                delete this.services[id];
             }
             else{
-                console.log("Is not IService");
+                console.error("Is not IService");
             }
         }
     }
